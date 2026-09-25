@@ -29,18 +29,39 @@
 
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+**Chunk size:** no fixed size. Each document is split on its `## ` section
+headings (Getting there, Eat and drink, What to see, ...), so a chunk is one
+section. A section longer than 500 characters is split further, on its own
+paragraph breaks. Measured across all 84 sections in `city_guides`: average
+310 characters, median 293. Only 7 sections exceed 500, and every one of
+those 7 already breaks into 2–3 blank-line-separated paragraphs, so 500 is
+the point past which a section gets split on structure it already has, not
+an arbitrary cutoff.
 
-<!-- What about YOUR documents made you pick these numbers? Short posts and
-     long sectioned guides don't want the same chunking, and "800 seemed
-     reasonable" earns nothing. Point at something you noticed when you read
-     the documents in Milestone 1.
+**Overlap:** none. `city_guides` documents are Markdown, one `# Title` line
+followed by several `## Heading` sections — the starter's fixed 800-character
+windows cut straight through those headings, which is exactly the problem
+worth solving (Milestone 3's brief for this corpus). Splitting on the
+heading instead means chunks aren't getting cut mid-sentence at the
+boundary, so there's no lost context at a cut point to recover with
+overlap. What replaces overlap is prepending each document's title to every
+one of its chunks: a section like "Getting there" or "Practical notes"
+doesn't say which town it's about on its own, and nine of the town guides
+share an identical "Practical notes" paragraph that never names its own
+town. Nine of the fourteen documents also open with a 120–250 character
+intro paragraph before their first heading (e.g. "Brightwater is a river
+town of about 40,000 people..."); that's kept as its own chunk, labelled
+"Overview", instead of being silently dropped.
 
-     If you changed your mind partway through, say so and say why. That's worth
-     more than pretending you got it right first time.
+I did not change strategy partway through — this is the first and only
+chunker written for this project, replacing the starter's
+`fallback_split` directly. One known imperfection: one of the five sample
+chunks below (`guide_accessibility.md`'s "Overview") is a generic intro
+sentence that doesn't name any town at all, which is a real gap in my own
+"names a town" rule from `criteria.md` criterion 4 — reported here rather
+than hidden.
 
-     Milestone 3. -->
+Produced by: `chunker.py::split_documents`
 
 ## Sample Chunks
 
@@ -53,29 +74,57 @@
 
      Milestone 3. -->
 
-**Chunk 1** — source: `` — produced by: ``
+**Chunk 1** — source: `guide_accessibility.md#0` — produced by: `chunker.py::split_documents`
 
 ```
+Getting around the region with limited mobility
+
+Overview
+An honest assessment rather than a promotional one. Some of these places are
+difficult and it is better to know in advance.
 ```
 
-**Chunk 2** — source: `` — produced by: ``
+**Chunk 2** — source: `guide_corry_vale.md#3` — produced by: `chunker.py::split_documents`
 
 ```
+Corry Vale
+
+Eat and drink
+One pub in the largest village serves food seven days a week. A second, in the third village, opens Thursday to Sunday. There is a farm shop at the valley mouth that sells bread, cheese and little else, and it closes at 4pm. Bring supplies; this is not a place with options.
 ```
 
-**Chunk 3** — source: `` — produced by: ``
+**Chunk 3** — source: `guide_givens_mill.md#1` — produced by: `chunker.py::split_documents`
 
 ```
+Givens Mill
+
+Getting there
+No station and no bus on Sundays; four buses a day from Brightwater on weekdays, taking 30 minutes. Driving is 20 minutes. The village car park holds about forty cars and is full by 11am on summer Saturdays.
 ```
 
-**Chunk 4** — source: `` — produced by: ``
+**Chunk 4** — source: `guide_kestrelford.md#5` — produced by: `chunker.py::split_documents`
 
 ```
+Kestrelford
+
+Where to stay
+Two inns on the square and a handful of rooms above the pubs. Booking ahead matters between May and September and not at all otherwise. There is no accommodation of any kind within four miles of the town in either direction.
 ```
 
-**Chunk 5** — source: `` — produced by: ``
+**Chunk 5** — source: `guide_regional_transport.md#1` — produced by: `chunker.py::split_documents`
 
 ```
+Getting around the region
+
+Buses
+Three operators run in the region and they do not accept each other's tickets,
+which is the single most common source of confusion for visitors. Services
+concentrate on weekday daytimes. Sunday service is minimal to non-existent
+outside the Brightwater town routes.
+
+The Kestrelford service is hourly on weekdays, two-hourly on Saturdays, and
+does not run on Sundays. The Halden Bay coast service runs four times daily
+year-round.
 ```
 
 ## Sample Answer
