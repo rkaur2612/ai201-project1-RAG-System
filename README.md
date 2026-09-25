@@ -132,27 +132,38 @@ year-round.
 <!-- One complete question and answer, pasted as text, with the source line
      visible. Milestone 4. -->
 
-**Question:**
+**Question:** Until what time do kitchens in Marchwood serve food on Fridays and Saturdays?
 
 **Answer:**
 
 ```
+Kitchens in Marchwood serve until midnight on Fridays and Saturdays (guide_marchwood.md).
+
+Sources retrieved: guide_eating.md, guide_kestrelford.md, guide_marchwood.md
 ```
 
-**My relevance cutoff:**
+**My relevance cutoff:** 0.6 (the starter's default, kept as-is).
 
-<!-- The number you set in config.py, and how you got there.
-
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
-
-     Milestone 4. -->
+I ran all five questions from `questions.py` and all five from `OUT_OF_SCOPE`
+through `python app.py retrieve "..."` and recorded the best distance for
+each. The five in-corpus questions all landed between 0.256 and 0.426; the
+five out-of-scope questions all landed between 0.815 and 0.992. That's a gap
+of almost 0.4 with nothing in between, so any cutoff from about 0.43 to 0.81
+would separate the two groups cleanly here. 0.6 sits well inside that gap, so
+I kept it rather than moving it without a reason to.
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| How much does it cost to climb the tower of the parish church in Kestrelford? | Yes | 0.426 |
+| Until what time do kitchens in Marchwood serve food on Fridays and Saturdays? | Yes | 0.256 |
+| How much cheaper is eating on Corry Lane than on the riverside strip in Brightwater? | Yes | 0.295 |
+| Where can I buy bread and cheese in Corry Vale? | Yes | 0.365 |
+| Which town in the region is easiest to get around for someone with limited mobility? | Yes | 0.279 |
+| What is the capital of Mongolia? | No | 0.815 |
+| How do I change the oil in a diesel engine? | No | 0.880 |
+| Who won the 1994 World Cup? | No | 0.992 |
+| What is the recommended dosage of ibuprofen for a headache? | No | 0.841 |
+| How do I write a for loop in Rust? | No | 0.870 |
 
 ## How I Used AI
 
