@@ -1,6 +1,6 @@
 # The Unofficial Guide
 
-<!-- Replace this line with your name and which corpus you picked. -->
+Raman Deep Kaur — corpus: `city_guides`
 
 > **This file is your submission.** Fill it in as you go — most sections get
 > written during the milestone that produces them, not at the end.
@@ -21,11 +21,14 @@
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+This is a RAG system over `city_guides`, a corpus of 14 travel guides covering
+nine fictional towns and five region-wide topics (eating, walking, transport,
+seasons, accessibility). It answers specific, factual questions about the
+region — prices, opening hours, travel times, and which town suits a
+particular need — by retrieving the relevant document sections and generating
+an answer grounded only in those sections. Every answer names the file it came
+from, and a question the corpus doesn't cover gets an honest refusal instead
+of a guess.
 
 ## Chunking Strategy
 
@@ -176,9 +179,21 @@ I kept it rather than moving it without a reason to.
 
      Milestone 5. -->
 
-**1.**
+**1.** I asked Claude to design and write the chunking function for
+`city_guides`. Before writing any code, it measured section lengths across
+all 84 sections in the corpus and used that to justify a 500-character cap,
+past which a section splits on its own paragraph breaks instead of staying
+whole. I reviewed the actual chunks it produced against the old fixed-window
+ones and confirmed they read as complete thoughts. The one thing I changed
+was the chunk format — I picked a plain, stacked layout (title, then heading,
+then body) over the dash-joined style it also offered.
 
-**2.**
+**2.** I asked Claude to draft the five questions in `questions.py` and their
+`expects` phrases, since I wasn't sure how to write them myself. It proposed
+a mix — Kestrelford's tower price, Marchwood's kitchen hours, two questions
+whose answers appear in two different documents, and a question about
+limited mobility — and checked that each `expects` phrase actually appears in
+the documents before handing them back. I kept all five as drafted.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
