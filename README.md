@@ -312,11 +312,16 @@ Kitchens in Marchwood serve food until midnight on Fridays and Saturdays (from g
 
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
+| 1 | Retrieved chunk contains the answer | MET | All 3 runs came out 5/5 against a 4/5 target — checked against the actual retrieved chunk text, not the model's answer, so this holds regardless of how the model phrased anything. |
+| 2 | Every answer names a source | MET | All 3 runs came out 5/5 against a 5 of 5 target — every one of the 15 real answers cited a filename. |
+| 3 | Gate stops out-of-corpus questions | MET | 5/5 against a 4/5 target, from `run_eval.py::check_out_of_scope`'s single deterministic pass — the gate refused all 5 `OUT_OF_SCOPE` questions. |
+| 4 | At least 3 of 5 sample chunks end at a sentence boundary and name a town | MET | 4/5 against a 3/5 target, in all 3 runs. This is the closest call of the five — I checked whether the one failing chunk (the `guide_accessibility.md` "Overview," which names no town) should be excluded from the sample, but the criterion's own wording says to use whatever `chunks -n 5` returns, with no exception, so the count stands at 4 good, 1 bad. |
+| 5 | At least 4 of 5 answers have every fact traceable to a retrieved chunk | MET | All 3 runs came out 5/5 against a 4/5 target — I checked every fact in all 15 answers against the full set of chunks sent to the model, not just the cited one, and found no invented facts even in the Marchwood case where a competing fact sat right next to the correct one. |
+
+Every criterion was MET on every run. Per the assignment's own warning, that's
+worth naming plainly rather than treating as a win: it most likely means the
+targets had comfortable margin built into them, not that the system is
+flawless. Milestone 3 addresses this directly.
 
 ## Diagnoses
 
