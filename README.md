@@ -222,11 +222,78 @@ the documents before handing them back. I kept all five as drafted.
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | *(Milestone 2)* |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | *(Milestone 2)* |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | *(Milestone 2)* |
+| 4. At least 3 of 5 sample chunks end at a sentence boundary and name a town | 3 of 5 | 4/5 | 4/5 | 4/5 | *(Milestone 2)* |
+| 5. At least 4 of 5 answers have every fact traceable to a retrieved chunk | 4 of 5 | 5/5 | 5/5 | 5/5 | *(Milestone 2)* |
+
+Full per-question data is in
+[`results/run_2026-09-29_1642_before.md`](results/run_2026-09-29_1642_before.md),
+produced by `run_eval.py::main`. Criteria 1, 3, and 4 check something
+deterministic — the index or the gate's distance comparison — not generated
+text, so the same number appears in all three columns for those, the same
+reasoning the starter gives for criterion 3.
+
+**Criterion 1** — checked the actual retrieved chunk text (not the model's
+answer) against each question's `expects` phrase, via `store.py::search`.
+Real output, the top chunk for "How much does it cost to climb the tower of
+the parish church in Kestrelford?":
+
+```
+Kestrelford
+
+What to see
+The market square on a Saturday morning is the main event and has run
+continuously since the 1400s. The parish church has a 13th-century tower
+you can climb for £2. The old trackbed walk runs six miles to the next
+village along an easy gradient and is the best half-day here.
+```
+
+**Criterion 2** — every one of the 15 real answers named a file. Real output
+from `generate.py::answer_from_chunks`, run 1 of "Until what time do kitchens
+in Marchwood serve food on Fridays and Saturdays?":
+
+```
+Kitchens in Marchwood serve food until midnight on Fridays and Saturdays (from `guide_marchwood.md`).
+```
+
+**Criterion 3** — produced by `run_eval.py::check_out_of_scope`, one
+deterministic pass, cutoff 0.6:
+
+```
+Out-of-scope questions (the gate should refuse these):
+  refused  (best distance 0.815)  What is the capital of Mongolia?
+  refused  (best distance 0.880)  How do I change the oil in a diesel engine?
+  refused  (best distance 0.992)  Who won the 1994 World Cup?
+  refused  (best distance 0.841)  What is the recommended dosage of ibuprofen for a headache?
+  refused  (best distance 0.870)  How do I write a for loop in Rust?
+  -> gate refused 5 of 5
+```
+
+**Criterion 4** — produced by `chunker.py::split_documents`, via
+`python app.py chunks -n 5`. 4 of 5 pass; chunk 1 is the one failure, since it
+names no town:
+
+```
+Chunk 1  |  source: guide_accessibility.md#0  |  produced by: chunker.py::split_documents
+Getting around the region with limited mobility
+
+Overview
+An honest assessment rather than a promotional one. Some of these places are
+difficult and it is better to know in advance.
+```
+
+**Criterion 5** — checked every fact in each answer against all chunks sent to
+the model (`generate.py::build_prompt`), not just the cited one. The clearest
+test case: the Marchwood question retrieves a competing "kitchens stop
+serving at 9pm" fact from `guide_eating.md` right alongside the correct
+Marchwood-specific fact, in all 3 runs, and the model never blended them —
+real output, run 3:
+
+```
+Kitchens in Marchwood serve food until midnight on Fridays and Saturdays (from guide_marchwood.md).
+```
 
 <!-- Underneath, paste the REAL output for each criterion from one of your
      runs — the actual text your system produced, not a description of it.
