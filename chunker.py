@@ -46,6 +46,19 @@ MAX_CHUNK_CHARS = 500
 _TITLE_RE = re.compile(r"^#\s+(.+)")
 _HEADING_RE = re.compile(r"(?m)^##\s+(.+?)\s*$")
 
+# unit 2, Milestone 4: the nine town guides in city_guides (see
+# corpora/README.md — "nine town guides, plus five that cut across all of
+# them"). Used only to check whether a piece of text names one of them by
+# name, for the Overview-merge fix below.
+TOWNS = [
+    "Brightwater", "Corry Vale", "Elder Ness", "Givens Mill", "Halden Bay",
+    "Kestrelford", "Marchwood", "Pellew Sands", "Thornby Wells",
+]
+
+
+def _mentions_a_town(text: str) -> bool:
+    return any(town in text for town in TOWNS)
+
 
 @dataclass
 class Chunk:
@@ -182,6 +195,29 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
         sections = _split_sections(body_text)
         if not sections:
             continue
+
+        # unit 2, Milestone 4 fix: a chunk passes criterion 4's town-name test
+        # if the town appears anywhere in it, including via the prepended
+        # title — which is why every town guide's chunks pass regardless of
+        # body text (the title *is* the town). That leaves exactly one gap:
+        # a document whose title ISN'T a town and whose lead-in paragraph
+        # (before the first "##" heading) doesn't name one either —
+        # guide_accessibility.md's "Overview" is the one case of this in
+        # city_guides. Rather than let that intro stand alone as its own
+        # chunk, fold it into the first sentence of the section that follows
+        # it, which does name a town. This is a general rule keyed off
+        # whether the text actually names a town, not a special case for one
+        # filename — it would catch the same problem in any future document.
+        if (
+            len(sections) >= 2
+            and sections[0][0] == "Overview"
+            and not _mentions_a_town(sections[0][1])
+            and not _mentions_a_town(title)
+        ):
+            intro = sections[0][1]
+            next_heading, next_body = sections[1]
+            merged_body = f"{intro}\n{next_body}"
+            sections = [(next_heading, merged_body)] + sections[2:]
 
         index = 0
         for heading, body in sections:

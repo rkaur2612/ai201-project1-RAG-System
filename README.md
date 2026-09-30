@@ -373,27 +373,166 @@ this milestone's fix targets.
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** In `chunker.py::split_documents`, a document's pre-heading
+intro paragraph (kept as its own "Overview" chunk) now gets folded into the
+first section that follows it, instead of standing alone, whenever that
+intro doesn't name a town and the document's own title isn't a town either.
+`guide_accessibility.md` is the one document in `city_guides` this applies
+to: its "Overview" chunk ("An honest assessment rather than a promotional
+one...") named no town, so it now merges into the "Straightforward" section
+that follows, which does. Every other document is unaffected — the chunk
+count went from 102 to 101, exactly the one merge.
 
-**Why I picked it:**
-
-<!-- Connect it to a specific diagnosis above in one sentence. If you can't,
-     you picked a fix because it sounded impressive. -->
+**Why I picked it:** Milestone 3's diagnosis found that criterion 4 (chunk
+quality) was the one criterion where tightening the target would flip the
+already-collected data from MET to MISS, and named the exact mechanism: the
+`guide_accessibility.md` "Overview" chunk names no town. This fix targets
+that mechanism directly, in `chunker.py` — the stage the diagnosis pointed
+at — rather than touching retrieval, the gate, or generation.
 
 ### Run Log — After
 
-<!-- Same format, same five criteria, three runs each.
-     `python run_eval.py --label after` -->
-
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. At least 3 of 5 sample chunks end at a sentence boundary and name a town | 3 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 5. At least 4 of 5 answers have every fact traceable to a retrieved chunk | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
 
-**Did it help?**
+Full per-question data is in
+[`results/run_2026-09-29_1708_after.md`](results/run_2026-09-29_1708_after.md).
+Real output, the same accessibility chunk that used to fail, now merged with
+the section after it (`chunker.py::split_documents`):
+
+```
+Getting around the region with limited mobility
+
+Straightforward
+An honest assessment rather than a promotional one. Some of these places are
+difficult and it is better to know in advance.
+**Thornby Wells** is the easiest town in the region. It is flat, compact, and
+everything is within three minutes of everything else. Parking is free for two
+hours anywhere in town and the station is central. The pump room and gardens
+are level throughout.
+```
+
+And the limited-mobility answer this feeds into, run 1 of
+"Which town in the region is easiest to get around for someone with limited
+mobility?" (`generate.py::answer_from_chunks`):
+
+```
+**Thornby Wells** is the easiest town in the region for someone with limited mobility because it is flat, compact, and everything is within three minutes of everything else (source: `guide_accessibility.md`).
+```
+
+**Did it help?** Yes, on the one criterion it targeted. Criterion 4 went from
+4/5 to 5/5 on all three runs — the fix's whole target was that one chunk, and
+it now passes. This is the concrete version of the diagnosis's own test: had
+I tightened criterion 4's target to "at least 4 of 5" or "5 of 5" instead of
+raising it just to talk about in the abstract, the before-fix data would have
+been a MISS and the after-fix data is a MET. Nothing else moved — I checked
+criteria 1, 2, 3 and 5 directly against the after-run's real chunk and answer
+text (not just the scorer's pass/fail), and every one is unchanged from
+before. That's expected: the fix touched exactly one chunk in one document,
+and the other four criteria had comfortable margin already, as Milestone 3
+noted.
+
+### Sample Chunks — After the fix
+
+Unit 1's "Sample Chunks" and distance table above are left exactly as they
+were, since they're the honest record of what the system produced before
+this unit — rewriting them would erase the comparison this whole unit is
+built on. This is the same kind of evidence, taken fresh after the fix, from
+`python app.py chunks -n 5` (now 101 chunks total, was 102):
+
+**Chunk 1** — source: `guide_accessibility.md#0` — produced by: `chunker.py::split_documents`
+
+```
+Getting around the region with limited mobility
+
+Straightforward
+An honest assessment rather than a promotional one. Some of these places are
+difficult and it is better to know in advance.
+**Thornby Wells** is the easiest town in the region. It is flat, compact, and
+everything is within three minutes of everything else. Parking is free for two
+hours anywhere in town and the station is central. The pump room and gardens
+are level throughout.
+```
+
+This is the chunk that used to fail criterion 4 — previously its own standalone
+"Overview" chunk, naming no town. It's now merged into "Straightforward,"
+names Thornby Wells, and still ends at a clean sentence boundary.
+
+**Chunk 2** — source: `guide_corry_vale.md#4` — produced by: `chunker.py::split_documents`
+
+```
+Corry Vale
+
+What to see
+The valley itself is the attraction. The footpath network is dense and well marked, and a circuit taking in three of the four villages is about nine miles with 500 metres of ascent. The chapel in the second village is 12th century and always unlocked.
+```
+
+**Chunk 3** — source: `guide_givens_mill.md#2` — produced by: `chunker.py::split_documents`
+
+```
+Givens Mill
+
+Getting around
+Everything is on one street along the river. The mill is at one end and the church at the other, eight minutes apart. The riverside path continues in both directions for as far as you want to walk.
+```
+
+**Chunk 4** — source: `guide_kestrelford.md#6` — produced by: `chunker.py::split_documents`
+
+```
+Kestrelford
+
+When to go
+Late spring and early autumn. The Saturday market runs year-round but is much reduced from November to February. August is busy with walkers. The single-track approach road is genuinely difficult in snow and the town can be cut off for a day or two most winters.
+```
+
+**Chunk 5** — source: `guide_regional_transport.md#2` — produced by: `chunker.py::split_documents`
+
+```
+Getting around the region
+
+Driving
+Roads are good between the towns and poor on the approaches to both Kestrelford
+and Halden Bay. The Kestrelford approach is single-track with passing places
+for the final eight minutes. The Halden Bay coast road is cut into the cliff
+and is slow rather than difficult.
+
+Parking is the constraint rather than driving. Both Halden Bay lots fill by
+10am on summer weekends. Kestrelford's lower car park is free and involves a
+steep walk up.
+```
+
+All 5 pass both of criterion 4's tests now (before the fix, chunk 1 above
+was the accessibility "Overview" chunk on its own, and it was the one
+failure).
+
+### Distances — After the fix
+
+Same method as unit 1's table, re-run after the fix. Only the limited-mobility
+question's distance moved (0.279 → 0.257, since its retrieved chunk is now
+larger, having absorbed the merged intro text); everything else is within
+noise of before:
+
+| Question | In corpus? | Best distance (before) | Best distance (after) |
+|---|---|---|---|
+| How much does it cost to climb the tower of the parish church in Kestrelford? | Yes | 0.426 | 0.426 |
+| Until what time do kitchens in Marchwood serve food on Fridays and Saturdays? | Yes | 0.256 | 0.256 |
+| How much cheaper is eating on Corry Lane than on the riverside strip in Brightwater? | Yes | 0.295 | 0.295 |
+| Where can I buy bread and cheese in Corry Vale? | Yes | 0.365 | 0.365 |
+| Which town in the region is easiest to get around for someone with limited mobility? | Yes | 0.279 | 0.257 |
+| What is the capital of Mongolia? | No | 0.815 | 0.809 |
+| How do I change the oil in a diesel engine? | No | 0.880 | 0.880 |
+| Who won the 1994 World Cup? | No | 0.992 | 0.992 |
+| What is the recommended dosage of ibuprofen for a headache? | No | 0.841 | 0.841 |
+| How do I write a for loop in Rust? | No | 0.870 | 0.870 |
+
+The gap between in-corpus (0.257–0.426) and out-of-scope (0.809–0.992) is
+still wide and clean, so the 0.6 cutoff from Milestone 4 (unit 1) still
+holds without needing to move it.
 
 <!-- Say plainly whether it did, and how you know. If it made things worse,
      say that — a change that backfired, honestly reported, earns full credit
