@@ -195,6 +195,14 @@ whose answers appear in two different documents, and a question about
 limited mobility — and checked that each `expects` phrase actually appears in
 the documents before handing them back. I kept all five as drafted.
 
+**3. (Unit 2)** I asked Claude to check which of my five criteria would
+actually flip from MET to MISS if tightened, using the numbers already
+collected, rather than guessing which one felt weakest. It tested all five
+against the real data and found only criterion 4 would flip — the others
+had enough margin that tightening the count alone wouldn't create real risk.
+I used that specific finding as my Milestone 3 diagnosis and Milestone 4
+target.
+
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
      claims earns nothing.
@@ -551,9 +559,50 @@ holds without needing to move it.
 
      Milestone 5. -->
 
+Nothing is currently MISSED after the fix — all five criteria came out MET on
+all three "after" runs. That doesn't mean nothing is worth flagging, though.
+Four real limits showed up while testing, none of which happened to surface
+as a failure with this specific test set:
+
+1. **Criterion 3's out-of-scope questions are all obviously distant**
+   (Mongolia, engine oil, a World Cup, ibuprofen, Rust). None shares any
+   vocabulary with a travel-guide corpus, so the gate has never been tested
+   against a genuinely tricky near-miss — a question about a real place that
+   happens to sound like it could be in this region, for instance.
+2. **The Milestone 4 fix is narrow by design.** It only catches a document
+   whose pre-heading intro names no town and whose title isn't a town either.
+   A different kind of townless chunk — a generic mid-document aside, say —
+   wouldn't be caught by this rule.
+3. **Criterion 5's faithfulness check was done by hand**, reading each of the
+   15 answers and matching facts against retrieved chunks myself. That
+   doesn't scale past 5 questions and depends on whoever's doing the check
+   being careful — it isn't a repeatable, automated test the way `scorer.py`
+   is for the other criteria.
+4. **The sample is small — 5 real questions, 5 out-of-scope ones.** A
+   criterion sitting at 5/5 here could still miss on a genuinely harder or
+   larger question set; 5 questions isn't enough to be confident the margin
+   is real everywhere, not just in the cases tested.
+
 ## What I'd Do Differently
 
 <!-- Knowing what you know now — which of your five criteria would you write
      differently, and why?
 
      Milestone 5. -->
+
+- **Criterion 1** — since the correct chunk ranked first for all 5 questions,
+  every time, I'd tighten this to "the top-1 result contains the answer"
+  next time, which is a stronger claim than "somewhere in the top 5."
+- **Criterion 2** — the target only checks that *a* filename is present, not
+  that it's the *correct* one. I'd rewrite it to require the cited file
+  actually being one that contains the answer.
+- **Criterion 3** — I'd replace at least some of the 5 `OUT_OF_SCOPE`
+  questions with genuinely tangential ones (real-world travel questions, not
+  "How do I write a for loop in Rust?") so the gate is tested against
+  something a person might plausibly type by mistake.
+- **Criterion 4** — this is the one Milestone 3 already flagged: "at least 3
+  of 5" had more slack than it needed. I'd write it as "at least 4 of 5"
+  from the start.
+- **Criterion 5** — I'd build a small automated checker for this instead of
+  reading answers by hand, so it's repeatable rather than a one-time manual
+  pass.
