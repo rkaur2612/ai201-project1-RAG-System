@@ -343,6 +343,34 @@ flawless. Milestone 3 addresses this directly.
 
      Milestone 3. -->
 
+Nothing was missed. All five criteria came out MET on all three runs.
+
+Yes, at least one of my targets was set with more room than it needed.
+Checking whether tightening each target would flip today's real result: for
+criterion 4, it would. My target was "at least 3 of 5" sample chunks pass
+(ends at a sentence boundary, names a town); the actual result was 4/5, not
+5/5 — the one failure is `guide_accessibility.md`'s "Overview" chunk, which
+is a generic intro sentence ("An honest assessment rather than a promotional
+one...") that never names any town before the document's first `##` heading.
+Chunking is the stage responsible: `chunker.py::split_documents` prepends the
+document's title to every heading-based section, but the pre-heading intro
+paragraph (kept as its own "Overview" chunk) is generic boilerplate that
+happens not to mention a town in its own text, and the title-prepend alone
+doesn't satisfy my own rule, which requires the *body* to name a town for a
+cross-cutting-guide chunk. If I tighten criterion 4 to "at least 4 of 5" (or
+"5 of 5"), the exact same data collected in Milestone 1 becomes a **MISS**
+instead of a MET, with no new test run needed to show it.
+
+I checked the other four the same way and none of them work this way:
+criterion 1 stayed 5/5 even under a stricter "top-1 result" reading, since
+the correct chunk ranked first for all 5 questions; criterion 2 is already at
+its maximum possible count (5 of 5); and criteria 3 and 5 both hit 5/5
+against a 4/5 target, but every `OUT_OF_SCOPE` question is an obviously
+unrelated topic (Mongolia, engines, sports, medicine, Rust), so tightening
+the *number* wouldn't create real risk — that would need harder, more
+tangential out-of-scope questions instead, a different kind of change than
+this milestone's fix targets.
+
 ## The Improvement
 
 **What I changed:**
